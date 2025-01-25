@@ -10,8 +10,8 @@ This repository contains Terraform configurations for managing infrastructure fo
 
 1. **Clone the repository:**
     ```sh
-    git clone https://github.com/yourusername/your-repo.git
-    cd your-repo
+    git clone https://github.com/alejandrobernalcollazos/devops-test
+    cd devops-test
     ```
 
 2. **Initialize Terraform:**
