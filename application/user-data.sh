@@ -58,7 +58,7 @@ cat << 'EOF' > /var/www/html/zealous.php
   <table border="0">
     <tr>
       <td>NAME</td>
-      <td>ADDRESS</td>
+      <td>LAST NAME</td>
     </tr>
     <tr>
       <td>
@@ -79,7 +79,7 @@ cat << 'EOF' > /var/www/html/zealous.php
   <tr>
     <td>ID</td>
     <td>NAME</td>
-    <td>ADDRESS</td>
+    <td>LAST NAME</td>
   </tr>
 
 <?php

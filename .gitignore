@@ -1,5 +1,8 @@
 # Ignore Terraform working directory
-.terraform/
+.terraform
+
+# Ignore .terraform.* files
+.terraform.*
 
 # Ignore SSH key folder and files
 ssh-key

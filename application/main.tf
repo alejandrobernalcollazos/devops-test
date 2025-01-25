@@ -27,7 +27,7 @@ resource "aws_security_group" "apache_sg" {
 # Create an SSH key pair resource
 resource "aws_key_pair" "my_key" {
   key_name   = "my-ec2-key"
-  public_key = file("./ssh-key/my-ec2-key.pub") # Path to your public key
+  public_key = file("${path.module}/ssh-key/my-ec2-key.pub") # Path to your public key
 }
 
 # Read the user data template file
@@ -35,19 +35,19 @@ data "template_file" "user_data" {
   template = file("${path.module}/user-data.sh") # Path to your template file
 
   vars = {
-    db_instance_endpoint = aws_db_instance.mariadb.endpoint
+    db_instance_endpoint = var.mariadb_endpoint
   }
 }
 
 # Create an EC2 instance
 resource "aws_instance" "app_server" {
-  ami             = "ami-093a4ad9a8cc370f4"
-  instance_type   = "t2.micro"
+  ami             = var.ami
+  instance_type   = var.instance_type
   security_groups = [aws_security_group.apache_sg.name]
   key_name        = aws_key_pair.my_key.key_name
 
   tags = {
-    Name = "ExampleAppServerInstance"
+    Name = var.name
   }
 
   user_data = data.template_file.user_data.rendered
