@@ -1,0 +1,14 @@
+# Ignore Terraform working directory
+.terraform/
+
+# Ignore SSH key folder and files
+ssh-key
+
+# Ignore .tfstate files
+*.tfstate
+
+# Ignore .tfstate.backup files
+*.tfstate.backup
+
+# Ignore .terraform.lock.hcl files
+.terraform.lock.hcl
