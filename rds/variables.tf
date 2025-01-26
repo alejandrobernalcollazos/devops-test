@@ -28,7 +28,7 @@ variable "instance_class" {
     default     = "db.t3.micro"
 }
 
-variable "name" {
+variable "db_name" {
     description = "The name of the database"
     type        = string
     default     = "sample"

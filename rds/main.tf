@@ -6,7 +6,7 @@ resource "aws_db_instance" "mariadb" {
   engine               = var.engine                   # MariaDB engine
   engine_version       = var.engine_version           # Specify the MariaDB version
   instance_class       = var.instance_class           # Instance type (modify as needed)
-  name                 = var.name                     # Database name
+  db_name              = var.db_name                     # Database name
   username             = var.username                 # Master username
   password             = var.password                 # Master password (shouldn't be hardcoded in production)
   parameter_group_name = var.parameter_group_name     # Parameter group for MariaDB
