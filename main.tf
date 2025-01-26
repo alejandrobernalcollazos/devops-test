@@ -29,6 +29,51 @@ module "vpc_secondary" {
   enable_dns_hostnames = true
 }
 
+# Setting up transit gateway connectivity between the primary and secondary regions
+
+# Create the primary transit gateway
+resource "aws_ec2_transit_gateway" "primary_tgw" {
+  amazon_side_asn = 64512
+  description     = "Primary Transit Gateway"
+}
+
+# Create the secondary transit gateway
+resource "aws_ec2_transit_gateway" "secondary_tgw" {
+  provider        = aws.secondary
+  amazon_side_asn = 64513
+  description     = "Secondary Transit Gateway"
+}
+
+# Attach the VPCs to the transit gateways
+resource "aws_ec2_transit_gateway_vpc_attachment" "primary_attachment" {
+  vpc_id             = module.vpc_primary.vpc_id
+  subnet_ids         = module.vpc_primary.private_subnets
+  transit_gateway_id = aws_ec2_transit_gateway.primary_tgw.id
+}
+
+resource "aws_ec2_transit_gateway_vpc_attachment" "secondary_attachment" {
+  provider          = aws.secondary
+  vpc_id            = module.vpc_secondary.vpc_id
+  subnet_ids        = module.vpc_secondary.private_subnets
+  transit_gateway_id = aws_ec2_transit_gateway.secondary_tgw.id
+}
+
+# Settup the route tables for the transit gateways
+
+# Primary VPC Route
+resource "aws_route" "primary_to_tgw" {
+  route_table_id         = module.vpc_primary.private_route_table_ids[0]
+  destination_cidr_block = module.vpc_secondary.vpc_cidr_block
+  transit_gateway_id     = aws_ec2_transit_gateway.primary_tgw.id
+}
+
+# Secondary VPC Route
+resource "aws_route" "secondary_to_tgw" {
+  provider               = aws.secondary
+  route_table_id         = module.vpc_secondary.private_route_table_ids[0]
+  destination_cidr_block = module.vpc_primary.vpc_cidr_block
+  transit_gateway_id     = aws_ec2_transit_gateway.secondary_tgw.id
+}
 
 # Create the primary database
 module "rds_primary" {
