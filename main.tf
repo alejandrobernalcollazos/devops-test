@@ -83,16 +83,6 @@ resource "aws_security_group_rule" "allow_mysql_primary" {
   cidr_blocks       = [module.vpc_secondary.vpc_cidr_block]
 }
 
-# Allow outbout traffic for the primary default security group to internet
-resource "aws_security_group_rule" "allow_outbound" {
-  type              = "egress"
-  from_port         = 0
-  to_port           = 0
-  protocol          = "-1"
-  security_group_id = module.vpc_primary.default_security_group_id
-  cidr_blocks       = ["0.0.0.0/0"]
-}
-
 resource "aws_security_group_rule" "allow_mysql_secondary" {
   provider          = aws.secondary
   type              = "ingress"
