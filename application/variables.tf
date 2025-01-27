@@ -20,3 +20,20 @@ variable "mariadb_endpoint" {
     description = "The endpoint of the MariaDB instance"
     type        = string
 }
+
+variable "subnet_id" {
+    description = "The ID of the subnet to launch the instance in"
+    type        = string
+}
+
+variable "security_groups" {
+    description = "A list of security group IDs to associate with the instance"
+    type        = list(string)
+    default     = []
+}
+
+variable "associate_public_ip_address" {
+    description = "Associate a public IP address with the instance"
+    type        = bool
+    default     = true
+}

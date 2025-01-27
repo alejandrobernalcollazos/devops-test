@@ -31,23 +31,59 @@ variable "instance_class" {
 variable "db_name" {
     description = "The name of the database"
     type        = string
-    default     = "sample"
+    default     = null
 }
 
 variable "username" {
     description = "The master username"
     type        = string
-    default     = "tutorial_user"
+    default     = null
 }
 
 variable "password" {
     description = "The master password"
     type        = string
-    default     = "masterpassword"
+    default     = null
 }
 
 variable "parameter_group_name" {
     description = "The name of the parameter group"
     type        = string
-    default     = "default.mariadb11.4"
+    default     = null
+}
+
+variable "publicly_accessible" {
+    description = "Whether the RDS instance is publicly accessible"
+    type        = bool
+    default     = false
+}
+
+variable "vpc_security_group_ids" {
+    description = "The security group IDs"
+    type        = list(string)
+    default     = []
+}
+
+variable "db_subnet_group_name" {
+    description = "The name of the subnet group"
+    type        = string
+    default     = ""
+}
+
+variable "skip_final_snapshot" {
+    description = "Whether to skip the final snapshot"
+    type        = bool
+    default     = true
+}
+
+variable "replicate_source_db" {
+    description = "The identifier of the replication source"
+    type        = string
+    default     = null
+}
+
+variable "backup_retention_period" {
+    description = "The number of days to retain backups for"
+    type        = number
+    default     = null
 }

@@ -43,7 +43,7 @@ data "template_file" "user_data" {
 resource "aws_instance" "app_server" {
   ami             = var.ami
   instance_type   = var.instance_type
-  security_groups = [aws_security_group.apache_sg.name]
+  security_groups = var.security_groups
   key_name        = aws_key_pair.my_key.key_name
 
   tags = {
@@ -51,4 +51,6 @@ resource "aws_instance" "app_server" {
   }
 
   user_data = data.template_file.user_data.rendered
+  subnet_id = var.subnet_id
+  associate_public_ip_address = var.associate_public_ip_address
 }
