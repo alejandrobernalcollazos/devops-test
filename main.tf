@@ -200,6 +200,7 @@ resource "aws_security_group_rule" "allow_web_sg_to_rds_primary" {
   source_security_group_id = aws_security_group.web_sg_primary.id
 }
 
+# Create the primary EC2 instance
 module "ec2_instance_primary" {
   source = "./application"
 
@@ -216,6 +217,63 @@ module "ec2_instance_primary" {
   associate_public_ip_address = true
 }
 
+# Create a security group for the web_lb_primary load balancer
+resource "aws_security_group" "alb_sg_primary" {
+  name        = "alb-sg-primary"
+  description = "Allow HTTPS inbound traffic"
+  vpc_id      = module.vpc_primary.vpc_id
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+# Create a loadbalancer to listen for 443 calls and forward them to the primary EC2 instance
+resource "aws_lb" "web_lb_primary" {
+  name               = "web-lb-primary"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.alb_sg_primary.id]
+  subnets            = module.vpc_primary.public_subnets
+}
+
+# Create a listener for the primary load balancer
+resource "aws_lb_listener" "web_lb_listener_primary" {
+  load_balancer_arn = aws_lb.web_lb_primary.arn
+  port              = 443
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = var.certificate_arn_primary
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.web_lb_target_group_primary.arn
+  }
+}
+
+# Create a target group for the primary load balancer
+resource "aws_lb_target_group" "web_lb_target_group_primary" {
+  name     = "web-lb-target-group-primary"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = module.vpc_primary.vpc_id
+}
+
+# Attach the primary EC2 instance to the primary target group
+resource "aws_lb_target_group_attachment" "web_lb_target_group_attachment_primary" {
+  target_group_arn = aws_lb_target_group.web_lb_target_group_primary.arn
+  target_id        = module.ec2_instance_primary.instance_id
+  port             = 80
+}
 
 
 ## Secondary EC2 instance
@@ -270,6 +328,7 @@ resource "aws_security_group_rule" "allow_web_sg_to_rds_secundary" {
   source_security_group_id = aws_security_group.web_sg_secundary.id
 }
 
+# Create the secondary EC2 instance
 module "ec2_instance_secondary" {
   source = "./application"
 
@@ -284,4 +343,123 @@ module "ec2_instance_secondary" {
   subnet_id        = module.vpc_secondary.public_subnets[0]
   security_groups  = [module.vpc_secondary.default_security_group_id, aws_security_group.web_sg_secundary.id]
   associate_public_ip_address = true
+}
+
+# Create a security group for the web_lb_secondary load balancer
+resource "aws_security_group" "alb_sg_secondary" {
+  provider    = aws.secondary
+  name        = "alb-sg-secondary"
+  description = "Allow HTTPS inbound traffic"
+  vpc_id      = module.vpc_secondary.vpc_id
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+# Create a loadbalancer to listen for 443 calls and forward them to the secondary EC2 instance
+resource "aws_lb" "web_lb_secondary" {
+  provider           = aws.secondary
+  name               = "web-lb-secondary"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.alb_sg_secondary.id]
+  subnets            = module.vpc_secondary.public_subnets
+}
+
+# Create a listener for the secondary load balancer
+resource "aws_lb_listener" "web_lb_listener_secondary" {
+  provider          = aws.secondary
+  load_balancer_arn = aws_lb.web_lb_secondary.arn
+  port              = 443
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = var.certificate_arn_secondary
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.web_lb_target_group_secondary.arn
+  }
+}
+
+# Create a target group for the secondary load balancer
+resource "aws_lb_target_group" "web_lb_target_group_secondary" {
+  provider = aws.secondary
+  name     = "web-lb-target-group-secondary"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = module.vpc_secondary.vpc_id
+}
+
+# Attach the primary EC2 instance to the secondary target group
+resource "aws_lb_target_group_attachment" "web_lb_target_group_attachment_secondary" {
+  provider         = aws.secondary
+  target_group_arn = aws_lb_target_group.web_lb_target_group_secondary.arn
+  target_id        = module.ec2_instance_secondary.instance_id
+  port             = 80
+}
+
+# Create a route53 record for the primary load balancer zealous.alejandroaws.com
+
+# data fetch the existing hosted zone
+data "aws_route53_zone" "primary" {
+  name = "alejandroaws.com"
+}
+
+# health check for alejandroaws.com
+resource "aws_route53_health_check" "app_fqdn" {
+  fqdn = "zealous.alejandroaws.com"
+  port = 443
+  type = "HTTPS"
+  
+  resource_path     = "/zealous.php"
+  request_interval  = 30
+  failure_threshold = 3
+}
+
+# Create a route53 record for the application pointing to the primary load balancer 
+resource "aws_route53_record" "app_record_primary" {
+  zone_id = data.aws_route53_zone.primary.zone_id
+  name    = "zealous"
+  type    = "A"
+  alias {
+    name                   = aws_lb.web_lb_primary.dns_name
+    zone_id                = aws_lb.web_lb_primary.zone_id
+    evaluate_target_health = true
+  }
+
+  health_check_id = aws_route53_health_check.app_fqdn.id
+
+  failover_routing_policy {
+    type = "PRIMARY"
+  }
+
+  set_identifier = "primary-record" # Unique name for the record
+}
+
+# Create a route53 record for the application pointing to the secondary load balancer 
+resource "aws_route53_record" "app_record_secondary" {
+  zone_id = data.aws_route53_zone.primary.zone_id
+  name    = "zealous"
+  type    = "A"
+  alias {
+    name                   = aws_lb.web_lb_secondary.dns_name
+    zone_id                = aws_lb.web_lb_secondary.zone_id
+    evaluate_target_health = true
+  }
+
+  failover_routing_policy {
+    type = "SECONDARY"
+  }
+
+  set_identifier = "secondary-record" # Unique name for the record
 }
