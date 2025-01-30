@@ -17,3 +17,8 @@ output "vpc_default_security_group_id" {
   description = "The ID of the default security group"
   value       = module.vpc.default_security_group_id
 }
+
+output "db_subnet_group_name" {
+  description = "The name of the db subnet group"
+  value       = aws_db_subnet_group.db_subnet_group.name
+}

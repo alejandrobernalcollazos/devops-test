@@ -27,3 +27,9 @@ variable "transit_gateway_amazon_side_asn" {
   description = "The Amazon side ASN for the transit gateway"
   type        = number
 }
+
+variable "db_subnet_group_name" {
+  description = "The name of the db subnet group"
+  type        = string
+}
+

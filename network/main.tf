@@ -24,3 +24,8 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "transite_gateway_to_vpc_attac
   transit_gateway_id = aws_ec2_transit_gateway.tgw.id
 }
 
+# Create subnet group for the db
+resource "aws_db_subnet_group" "db_subnet_group" {
+  name       = var.db_subnet_group_name
+  subnet_ids = module.vpc.private_subnets
+}
