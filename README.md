@@ -82,6 +82,7 @@ One for the primary and another for the secondary with a health check in the pri
 
 - `application` - This folder contains the module to setup the application infrastructure the EC2 instance.
 - `rds` - This folder contains the module to setup the MariaDB infrastructure.
+- `network` - This folder contains the module to setup the networking infrastructure (vpc, subnets, transit gateways, subnet groups, etc)
 - `main.tf` - Its the main file that uses the application and rds modules to setup the infrastructure as well as the networking.
 - `providers.tf` - Provider configurations.
 
